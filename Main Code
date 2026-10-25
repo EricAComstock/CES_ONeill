@@ -1,0 +1,49 @@
+import numpy as np
+from scipy.integrate import solve_ivp
+
+# basic values
+z_start = 0.0
+z_end = 1000.0
+Ns_start = 0.0
+
+# these functions are placeholders for now
+def r(z):
+    return 1000.0
+def q_r(z):
+    return 0.0
+def q_z(z):
+    return 0.0
+# radius derivatives
+def dr_dz(z):
+    return 0.0
+def d2r_dz2(z):
+    return 0.0
+# A formula
+def A(z):
+    return np.sqrt(1 + dr_dz(z)**2)
+
+# N theta equation
+def N_theta(z, Ns):
+    return r(z) * (q_r(z) - dr_dz(z) * q_z(z)) - (r(z) * d2r_dz2(z) / A(z)**2) * Ns
+
+# equation for Ns
+def Ns_equation(z, Ns):
+    radius = r(z)
+    slope = dr_dz(z)
+    Nt = N_theta(z, Ns[0])
+
+    dNs_dz = -(slope / radius) * (Ns[0] - Nt) + (slope * q_r(z) + q_z(z))
+
+    return [dNs_dz]
+
+# solve for Ns
+solution = solve_ivp(
+    Ns_equation,
+    (z_start, z_end),
+    [Ns_start],
+    t_eval=np.linspace(z_start, z_end, 100)
+)
+
+print("Solver successful:", solution.success)
+print("Starting Ns:", solution.y[0][0])
+print("Ending Ns:", solution.y[0][-1])
