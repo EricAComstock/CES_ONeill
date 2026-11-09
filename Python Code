@@ -1,0 +1,71 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+L = 1000
+R = 100
+omega = 0.1
+P = 101325
+rho = 2700
+t = 0.5
+
+def r(z):
+    return R + 10 * np.cos(6 * np.pi * z / L)
+
+def dr(z):
+    return -10 * (6 * np.pi / L) * np.sin(6 * np.pi * z / L)
+
+def d2r(z):
+    return -10 * (6 * np.pi / L)**2 * np.cos(6 * np.pi * z / L)
+
+def a(z):
+    return np.sqrt(1 + dr(z)**2)
+
+def curvature_s(z):
+    return -d2r(z) / a(z)**3
+
+def curvature_theta(z):
+    return 1 / (r(z) * a(z))
+
+def loading(z):
+    qr = P / a(z) + rho * t * omega**2 * r(z)
+    qz = -P * dr(z) / a(z)
+    return qr, qz
+
+def shell_properties(z):
+    qr, qz = loading(z)
+    return {
+        "radius": r(z),
+        "slope": dr(z),
+        "curvature_s": curvature_s(z),
+        "curvature_theta": curvature_theta(z),
+        "radial_force": qr,
+        "axial_force": qz
+    }
+
+z = np.linspace(0, L, 1000)
+qr, qz = loading(z)
+
+fig, ax = plt.subplots(3, 1, figsize=(9, 10))
+
+ax[0].plot(z, r(z))
+ax[0].plot(z, -r(z))
+ax[0].set_title("Cylinder Shape")
+
+ax[1].plot(z, curvature_s(z), label="Meridional")
+ax[1].plot(z, curvature_theta(z), label="Hoop")
+ax[1].set_title("Shell Curvature")
+ax[1].legend()
+
+ax[2].plot(z, qr, label="Radial")
+ax[2].plot(z, qz, label="Axial")
+ax[2].set_title("Applied Loading")
+ax[2].legend()
+
+for plot in ax:
+    plot.set_xlabel("Axial Position (m)")
+    plot.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+print(shell_properties(L / 2))
